@@ -155,6 +155,7 @@ export type InputObject<Src> = {
   name: string;
   description?: string;
   fieldsFn: () => InputFieldMap<Src>;
+  extensions?: Record<string, any>;
 };
 
 type ResolveType<Src, Ctx> = (

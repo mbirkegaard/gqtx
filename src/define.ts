@@ -28,6 +28,9 @@ type ExtensionsMap = {
   objectType?: {
     [key: string]: any;
   };
+  inputObjectType?: {
+    [key: string]: any;
+  };
 };
 
 type ResolvePartialMandatory<Src, Arg, Ctx, Out> = {
@@ -131,10 +134,12 @@ export type Factory<Ctx, TExtensionsMap extends ExtensionsMap> = {
     name,
     description,
     fields,
+    extensions,
   }: {
     name: string;
     description?: string | undefined;
     fields: (self: InputType<Src | null>) => InputFieldMap<Src>;
+    extensions?: TExtensionsMap['inputObjectType'];
   }): InputObject<Src | null>;
   unionType<Src>({
     name,
@@ -365,16 +370,21 @@ export function createTypesFactory<
       name,
       description,
       fields,
+      extensions,
     }: {
       name: string;
       description?: string;
       fields: (self: InputType<Src | null>) => InputFieldMap<Src>;
+      extensions?: TExtensions['objectType'] extends undefined
+        ? Record<string, any>
+        : TExtensions['objectType'];
     }): InputObject<Src | null> {
       let inputObj: InputObject<Src | null> = {
         kind: 'InputObject',
         name,
         description,
         fieldsFn: null as any,
+        extensions,
       };
 
       inputObj.fieldsFn = () => fields(inputObj);

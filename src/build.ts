@@ -126,6 +126,7 @@ export function toGraphQLInputType<Ctx>(
         name: t.name,
         description: t.description,
         fields: graphqlFields,
+        extensions: t.extensions,
       });
 
       typeMap.set(t, obj);
