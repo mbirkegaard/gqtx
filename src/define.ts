@@ -188,25 +188,23 @@ export type Factory<Ctx, TExtensionsMap extends ExtensionsMap> = {
       ...Field<Ctx, RootSrc, any, {}>[]
     ];
   }): ObjectType<Ctx, RootSrc>;
-  subscriptionField<RootSrc, Event, Out, Arg>(opts: {
-    name: string;
-    type: OutputType<Ctx, Out>;
-    args?: ArgMap<Arg> | undefined;
-    description?: string | undefined;
-    deprecationReason?: string | undefined;
-    subscribe: (
-      src: RootSrc,
-      args: TOfArgMap<ArgMap<Arg>>,
-      ctx: Ctx,
-      info: graphql.GraphQLResolveInfo
-    ) => PromiseOrValue<AsyncIterableIterator<Event>>;
-    resolve: (
-      source: Event,
-      args: TOfArgMap<ArgMap<Arg>>,
-      ctx: Ctx,
-      info: graphql.GraphQLResolveInfo
-    ) => PromiseOrValue<Out>;
-  }): SubscriptionField<Ctx, RootSrc, Arg, Event, Out>;
+  subscriptionField<RootSrc, Event, Out, Arg>(
+    opts: {
+      name: string;
+      type: OutputType<Ctx, Out>;
+      args?: ArgMap<Arg> | undefined;
+      description?: string | undefined;
+      deprecationReason?: string | undefined;
+      subscribe: (
+        src: RootSrc,
+        args: TOfArgMap<ArgMap<Arg>>,
+        ctx: Ctx,
+        info: graphql.GraphQLResolveInfo
+      ) => PromiseOrValue<AsyncIterableIterator<Event>>;
+    } & (Event extends Out
+      ? ResolvePartialOptional<Event, Arg, Ctx, Out>
+      : ResolvePartialOptional<Event, Arg, Ctx, Out>)
+  ): SubscriptionField<Ctx, RootSrc, Arg, Event, Out>;
   subscriptionType<Src>({
     name,
     fields,
@@ -478,32 +476,30 @@ export function createTypesFactory<
         fieldsFn: fields,
       };
     },
-    subscriptionField<RootSrc, Event, Out, Arg>(opts: {
-      name: string;
-      type: OutputType<Ctx, Out>;
-      args?: ArgMap<Arg> | undefined;
-      subscribe: (
-        src: RootSrc,
-        args: TOfArgMap<ArgMap<Arg>>,
-        ctx: Ctx,
-        info: graphql.GraphQLResolveInfo
-      ) => PromiseOrValue<AsyncIterableIterator<Event>>;
-      resolve: (
-        source: Event,
-        args: TOfArgMap<ArgMap<Arg>>,
-        ctx: Ctx,
-        info: graphql.GraphQLResolveInfo
-      ) => PromiseOrValue<Out>;
-      description?: string | undefined;
-      deprecationReason?: string | undefined;
-    }): SubscriptionField<Ctx, RootSrc, Arg, Event, Out> {
+    subscriptionField<RootSrc, Event, Out, Arg>(
+      opts: {
+        name: string;
+        type: OutputType<Ctx, Out>;
+        args?: ArgMap<Arg> | undefined;
+        subscribe: (
+          src: RootSrc,
+          args: TOfArgMap<ArgMap<Arg>>,
+          ctx: Ctx,
+          info: graphql.GraphQLResolveInfo
+        ) => PromiseOrValue<AsyncIterableIterator<Event>>;
+        description?: string | undefined;
+        deprecationReason?: string | undefined;
+      } & (Event extends Out
+        ? ResolvePartialOptional<Event, Arg, Ctx, Out>
+        : ResolvePartialMandatory<Event, Arg, Ctx, Out>)
+    ): SubscriptionField<Ctx, RootSrc, Arg, Event, Out> {
       return {
         kind: 'SubscriptionField',
         name: opts.name,
         type: opts.type,
         args: opts.args ?? ({} as ArgMap<Arg>),
         subscribe: opts.subscribe,
-        resolve: opts.resolve,
+        resolve: opts.resolve ?? ((v: Event) => v as unknown as Out),
         description: opts.description,
         deprecationReason: opts.deprecationReason,
       };
